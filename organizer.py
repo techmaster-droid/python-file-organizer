@@ -3,6 +3,7 @@ import shutil
 
 #Path to the folder you want to organize
 SOURCE_FOLDER = input("Enter folder path: ")
+print("File Organize Tool Started")
 
 #File type mapping
 FILE_TYPES = {
