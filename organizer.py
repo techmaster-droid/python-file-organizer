@@ -1,6 +1,7 @@
 import os
 import shutil
 import logging
+import argparse
 
 class FileOrganizer:
     FILE_TYPES = {
@@ -24,8 +25,7 @@ class FileOrganizer:
 
     def create_folders(self):
         for folder in self.FILE_TYPES.keys():
-            folder_path = os.path.join(self.base_path, folder)
-            os.makedirs(folder_path, exist_ok=True)
+            os.makedirs(os.path.join(self.base_path, folder), exist_ok=True)
         os.makedirs(os.path.join(self.base_path, "Others"), exist_ok=True)
 
     def organize_files(self):
@@ -35,34 +35,50 @@ class FileOrganizer:
             if not os.path.isfile(file_path):
                 continue
 
-            move = False
+            logging.info(f"Processing file: {file_name}")
+
+            moved = False
             _, extension = os.path.splitext(file_name.lower())
 
             for folder, extensions in self.FILE_TYPES.items():
                 if extension in extensions:
                     destination = os.path.join(self.base_path, folder, file_name)
 
-                    if not os.path.exists(destination):
-                        shutil.move(file_path, destination)
-                        print(f"Moved: {file_name} -> {folder}")
+                    try:
+                        if not os.path.exists(destination):
+                            shutil.move(file_path, destination)
+                            logging.info(f"Moved: {file_name} -> {folder}")
+                            print(f"Moved: {file_name} -> {folder}")
+                        else:
+                            logging.warning(f"Skipped {file_name} (already exists)")
+                    except Exception as e:
+                        logging.error(f"Error moving {file_name}: {e}")
+                        print(f"Error moving {file_name}")
 
                     moved = True
                     break
-
             if not moved:
                 destination = os.path.join(self.base_path, "Others", file_name)
-                if not os.path.exists(destination):
+                try:
                     shutil.move(file_path, destination)
-                    print(f"Moved: {file_name} -> Others")
                     logging.info(f"Moved: {file_name} -> Others")
+                    print(f"Moved: {file_name} -> Others")
+                except Exception as e:
+                    logging.error(f"Error moving {file_name}: {e}")
+                    print(f"Error moving {file_name}")
 
     def run(self):
+        logging.info("File organization started.")
         self.create_folders()
         self.organize_files()
-        print("Files organized successfully!")
         logging.info("File organization completed.")
+        print("Process completed successfully!")
 
 if __name__ == "__main__":
-    path = input("Enter folder path: ")
-    organizer = FileOrganizer(path)
+    parser = argparse.ArgumentParser(description="Organize files by type.")
+    parser.add_argument("path", help="Path of the folder to organize")
+
+    args = parser.parse_args()
+
+    organizer = FileOrganizer(args.path)
     organizer.run()
